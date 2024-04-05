@@ -64,7 +64,7 @@ jobs:
         run: |
           poetry export --output requirements-dev.txt --with dev
           pip install -r requirements-dev.txt
-          poetry run scripts/lint.sh
+          poetry run scripts/lint.sh --include-safety
       - name: Run tests
         run: |
           cp .env.example .env
