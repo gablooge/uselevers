@@ -1,0 +1,70 @@
+# To configure application environmental variables, place them in .env and update
+# .env.example.
+#
+# When adding environmental variables to this file, always add ":?configure_dotenv"
+# to the variable during any occurrence of the variable.
+
+x-common: &common
+  restart: unless-stopped
+  read_only: true
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 15s
+  timeout: 10s
+  retries: 2
+  start_period: 30s
+
+x-env: &env
+  env_file:
+    # Use environment from .env first
+    - .env
+    # Apply Docker overrides afterwards
+    - .env.docker
+
+services:
+  # When adding services, please also update the SERVICES variable in README.md.
+
+  database:
+    image: ${DOCKERHUB:-docker.io}/library/postgres:15
+    <<: [*common, *env]
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "pg_isready"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?configure_dotenv}
+      POSTGRES_USER: ${POSTGRES_USER:?configure_dotenv}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?configure_dotenv}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - database:/var/lib/postgresql/data
+    tmpfs:
+      - /var/run/postgresql
+    expose:
+      - "5432"
+    ports:
+      # Bind locally to prevent remote access
+      - 127.0.0.1:5432:5432
+
+  app:
+    image: uselevers-backend:${REGISTRY_TAG:-dev}
+    depends_on: [database]
+    build:
+      context: .
+      target: dev
+    <<: [*common, *env]
+    healthcheck:
+      # Reduce healthcheck frequency to reduce log noise
+      interval: 120s
+    volumes:
+      - ./uselevers:/app/uselevers:${SRC_RW:-ro}
+      - ./uselevers/migrations/versions:/app/uselevers/migrations/versions
+    tmpfs:
+      - /tmp
+    expose:
+      - "80"
+    ports:
+      - 7000:80
+volumes:
+  database: {}
+
+# vim: set et ts=2 sw=2:

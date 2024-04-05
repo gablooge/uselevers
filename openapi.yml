@@ -1,0 +1,32 @@
+components:
+  schemas:
+    Health:
+      properties:
+        db:
+          default: false
+          title: Db
+          type: boolean
+      title: Health
+      type: object
+info:
+  title: Uselevers Backend
+  version: 1.0.0-dev
+openapi: 3.1.0
+paths:
+  /health:
+    get:
+      description: Perform internal health checks
+      operationId: health
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: Successful Response
+      summary: Health
+      tags:
+      - Internal
+servers:
+- description: ''
+  url: /
