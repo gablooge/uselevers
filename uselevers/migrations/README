@@ -1,1 +1,29 @@
 Generic single-database configuration.
+
+
+Some alembic example commands
+
+```sh
+# generate migration
+docker compose -f docker-compose.dev.yml run --rm app alembic revision --autogenerate -m "Describe this migration"
+# Look the generated migrations versions, check if there's new ENUM, make sure add drop type e.g op.execute("DROP TYPE enumname") in downgrade()
+
+# alternatively to generate the alembic migration locally with poetry
+poetry run alembic revision --autogenerate -m "Describe this migration"
+
+# show histories
+docker compose -f docker-compose.dev.yml run --rm app alembic history
+# or
+poetry run alembic history
+
+# Running migration
+docker compose -f docker-compose.dev.yml run --rm app alembic upgrade head
+# or
+poetry run alembic upgrade head
+
+# Rollout
+poetry run alembic  upgrade +1
+
+# Rollback
+poetry run alembic  downgrade -1
+```

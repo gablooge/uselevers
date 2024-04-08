@@ -71,3 +71,6 @@ jobs:
           export $(grep -v '^#' .env | xargs -0)
           export SQLALCHEMY_DATABASE_URI=postgresql://$USELEVERS_DB_USER:$USELEVERS_DB_PASSWORD@localhost/$USELEVERS_DB_NAME
           poetry run coverage run -m pytest $@ && coverage xml
+      - name: Check generate openapi
+        run: |
+          poetry run generate-openapi && git diff --exit-code

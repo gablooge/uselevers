@@ -1,9 +1,9 @@
 """
-init auth tables
+init auth table
 
-Revision ID: b5449c8b9a2c
+Revision ID: 109d2489d83f
 Revises:
-Create Date: 2024-04-05 23:00:02.591077
+Create Date: 2024-04-06 14:03:23.969625
 
 """
 
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "b5449c8b9a2c"
+revision = "109d2489d83f"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -25,6 +25,18 @@ def upgrade() -> None:
         sa.Column("username", sa.String(length=50), nullable=False),
         sa.Column("email", sa.String(length=100), nullable=False),
         sa.Column("password", sa.String(length=100), nullable=False),
+        sa.Column(
+            "updated",
+            sa.DateTime(),
+            server_default=sa.text("NOW()::timestamp"),
+            nullable=False,
+        ),
+        sa.Column(
+            "created",
+            sa.DateTime(),
+            server_default=sa.text("NOW()::timestamp"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("email"),
     )
