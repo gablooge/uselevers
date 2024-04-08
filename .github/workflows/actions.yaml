@@ -2,6 +2,11 @@ name: Uselevers Backend
 
 on: [push]
 
+env:
+  USELEVERS_DB_USER: ${{ secrets.USELEVERS_DB_USER }}
+  USELEVERS_DB_NAME: ${{ secrets.USELEVERS_DB_NAME }}
+  USELEVERS_DB_PASSWORD: ${{ secrets.USELEVERS_DB_PASSWORD }}
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -71,3 +76,9 @@ jobs:
           export $(grep -v '^#' .env | xargs -0)
           export SQLALCHEMY_DATABASE_URI=postgresql://$USELEVERS_DB_USER:$USELEVERS_DB_PASSWORD@localhost/$USELEVERS_DB_NAME
           poetry run coverage run -m pytest $@ && coverage xml
+      - name: Check generate openapi
+        run: |
+          cp .env.example .env
+          export $(grep -v '^#' .env | xargs -0)
+          export SQLALCHEMY_DATABASE_URI=postgresql://$USELEVERS_DB_USER:$USELEVERS_DB_PASSWORD@localhost/$USELEVERS_DB_NAME
+          poetry run generate-openapi && git diff --exit-code

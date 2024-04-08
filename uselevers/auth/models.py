@@ -3,10 +3,10 @@ import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from uselevers.core.models import Base, id_gen, id_len
+from uselevers.core.models import Base, MixinCreatedUpdated, id_gen, id_len
 
 
-class User(Base):
+class User(Base, MixinCreatedUpdated):
     __tablename__ = "users"  # type: ignore[assignment]
     id: Mapped[str] = mapped_column(
         String(id_len),
