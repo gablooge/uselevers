@@ -51,6 +51,7 @@ def test_crud_bills(
     # test update and delete
     with db.begin():
         created_bill = db.query(Bill).first()
+        assert created_bill is not None
         # test update with valid total
         new_total: float = 1.10
         created_bill.total = new_total
@@ -68,7 +69,7 @@ def test_crud_bills(
 
 def test_create_bill_with_invalid_total(
     db: Annotated[Session, Depends(deps.get_db)],  # noqa: F811
-):
+) -> None:
     bill_create = BillSpec(
         total=-1,
     )
