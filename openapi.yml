@@ -108,6 +108,51 @@ info:
 openapi: 3.1.0
 paths:
   /api/v1/bills:
+    get:
+      description: Get all bills.
+      operationId: read_bills
+      parameters:
+      - in: query
+        name: reference
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reference
+      - in: query
+        name: total_from
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Total From
+      - in: query
+        name: total_to
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Total To
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Bill'
+                title: Response Read Bills Api V1 Bills Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Read Bills
     post:
       description: Create new bill.
       operationId: create_bills

@@ -14,7 +14,7 @@ class Bill(Base, MixinCreatedUpdated):
     )
     total = mapped_column(Float, nullable=False)
 
-    sub_bills = relationship(
+    sub_bills_ref = relationship(
         "SubBill",
         back_populates="bill",
         cascade="all, delete-orphan",
@@ -25,6 +25,18 @@ class Bill(Base, MixinCreatedUpdated):
 
     # Add a CheckConstraint to enforce that total must be positive
     __table_args__ = (CheckConstraint("total >= 0", name="check_positive_total"),)
+
+    @property
+    def sub_bills(self):  # type: ignore[no-untyped-def]
+        return self._sub_bills
+
+    @sub_bills.setter
+    def sub_bills(self, value):  # type: ignore[no-untyped-def]
+        self._sub_bills = value
+
+    @sub_bills.getter
+    def sub_bills(self):  # type: ignore[no-untyped-def]
+        return self._sub_bills
 
 
 class SubBill(Base, MixinCreatedUpdated):
@@ -38,7 +50,7 @@ class SubBill(Base, MixinCreatedUpdated):
     amount = mapped_column(Float, nullable=False)
     reference = Column(String, nullable=True)
 
-    bill = relationship("Bill", back_populates="sub_bills", foreign_keys=[bill_id])
+    bill = relationship("Bill", back_populates="sub_bills_ref", foreign_keys=[bill_id])
 
     __table_args__ = (
         Index("unique_reference_case_insensitive", func.lower(reference), unique=True),
