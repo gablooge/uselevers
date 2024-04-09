@@ -1,12 +1,10 @@
-from typing import Annotated, Any
+from typing import Any
 
 import pytest
-from fastapi import Depends
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from uselevers.bills.models import Bill
-from uselevers.core import deps
 from uselevers.tests.conftest import (  # noqa: F401,F811
     SessionTest,
     alembic_engine,
@@ -42,7 +40,7 @@ from uselevers.tests.conftest import (  # noqa: F401,F811
 )
 def test_post_bill_201(
     client: TestClient,  # noqa: F811
-    db: Annotated[Session, Depends(deps.get_db)],  # noqa: F811
+    db: Session,  # noqa: F811
     total: float,
     sub_bills: list[dict[str, Any]],
 ) -> None:
@@ -180,7 +178,6 @@ def test_post_bill_422_invalid_reference(
     response = client.post("/api/v1/bills", json=data)
     assert response.status_code == 409
     result = response.json()
-    print(result)
     assert (
         result["detail"]["errors"]["reference"][0]
         == "Bill reference value already exists. Please select another value."
