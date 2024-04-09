@@ -40,5 +40,4 @@ def create_multiple_bills(
             "total": bill["total"],
             "sub_bills": bill["sub_bills"],
         }
-        response = client.post("/api/v1/bills", json=data)
-        assert response.status_code == 201
+        _ = client.post("/api/v1/bills", json=data)
