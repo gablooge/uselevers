@@ -2,16 +2,21 @@ import logging
 import sys
 import time
 import typing
+from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
 
 from alembic.command import upgrade
 from alembic.config import Config
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.routing import APIRoute
+from pydantic import ValidationError
 
+from uselevers.bills.views import bills_router
 from uselevers.core.config import log_level_from, settings
 from uselevers.core.healthcheck import healthcheck_router
 
@@ -82,6 +87,25 @@ async def unicorn_exception_handler(request: Request, exc: Exception) -> None:
     )
 
 
+@app.exception_handler(ValidationError)
+@app.exception_handler(RequestValidationError)
+async def custom_validation_error(
+    request: Request, exc: ValidationError
+) -> JSONResponse:
+    reformatted_message: typing.Any = defaultdict(list)
+    for pydantic_error in exc.errors():
+        loc, msg = pydantic_error["loc"], pydantic_error["msg"]
+        filtered_loc = loc[1:] if loc[0] in ("body", "query", "path") else loc
+        field_string = ".".join(map(str, filtered_loc))
+        reformatted_message[field_string].append(msg)
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=jsonable_encoder(
+            {"detail": {"message": "Invalid request", "errors": reformatted_message}}
+        ),
+    )
+
+
 # Global middleware
 
 
@@ -139,7 +163,7 @@ app.add_middleware(
 # Attach routes
 
 
-# app.include_router(api_router, prefix=settings.API_V1_PATH)
+app.include_router(bills_router, prefix=settings.API_V1_PATH)
 app.include_router(healthcheck_router, tags=["Internal"])
 
 

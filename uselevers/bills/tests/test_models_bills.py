@@ -1,14 +1,13 @@
-from typing import Annotated
+from typing import Any
 
 import pytest
-from fastapi import Depends
-from fastapi.encoders import jsonable_encoder
+from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from uselevers.bills.models import Bill
-from uselevers.bills.schemas import BillSpec
-from uselevers.core import deps
+from uselevers.bills.queries import save_billspec
+from uselevers.bills.schemas import BillSpec, SubBillSpec
 from uselevers.tests.conftest import SessionTest, alembic_engine, db  # noqa: F401,F811
 
 
@@ -22,19 +21,19 @@ from uselevers.tests.conftest import SessionTest, alembic_engine, db  # noqa: F4
     ],
 )
 def test_crud_bills(
-    db: Annotated[Session, Depends(deps.get_db)],  # noqa: F811
+    db: Session,  # noqa: F811
     total: float,
 ) -> None:
     bill_create = BillSpec(
         total=total,
+        sub_bills=[
+            SubBillSpec(amount=1, reference="INV-1"),
+        ],
     )
     with db.begin():
         # test create
         assert db.query(Bill).count() == 0
-        instance = Bill(**jsonable_encoder(bill_create))
-        db.add(instance)
-        # write the object to the database
-        db.flush()
+        instance = save_billspec(db, bill_create)
         assert db.query(Bill).count() == 1
 
         # test read
@@ -67,19 +66,28 @@ def test_crud_bills(
         assert db.query(Bill).count() == 0
 
 
+@pytest.mark.parametrize(
+    "total",
+    [
+        (-1),
+    ],
+)
 def test_create_bill_with_invalid_total(
-    db: Annotated[Session, Depends(deps.get_db)],  # noqa: F811
+    db: Session,  # noqa: F811
+    total: Any,
 ) -> None:
-    bill_create = BillSpec(
-        total=-1,
-    )
-    with db.begin():
-        # test create
-        assert db.query(Bill).count() == 0
-        with pytest.raises(IntegrityError):
-            instance = Bill(**jsonable_encoder(bill_create))
-            db.add(instance)
-            db.flush()
+    with pytest.raises(ValidationError):
+        bill_create = BillSpec(
+            total=total,
+            sub_bills=[
+                SubBillSpec(amount=1, reference="ref-1"),
+            ],
+        )
+        with db.begin():
+            # test create
+            assert db.query(Bill).count() == 0
+            with pytest.raises(IntegrityError):
+                save_billspec(db, bill_create)
 
     with db.begin():
         assert db.query(Bill).count() == 0

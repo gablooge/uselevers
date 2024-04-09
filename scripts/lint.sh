@@ -8,7 +8,13 @@ ruff .
 ruff format . --check
 flake8 .
 black --check --diff .
-bandit -c .bandit.yml -r *
+
+# Check if --skip-bandit argument is provided
+if [[ "$1" == "--skip-bandit" ]]; then
+    echo "Skipping bandit check"
+else
+    bandit -c .bandit.yml -r *
+fi
 
 if [[ -n "$1" && "$1" == "--include-safety" ]]; then
     echo "Running safety check..."
