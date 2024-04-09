@@ -1,5 +1,64 @@
 components:
   schemas:
+    Bill:
+      properties:
+        created:
+          description: Created at
+          format: date-time
+          title: Created
+          type: string
+        id:
+          description: Bill ID
+          maxLength: 32
+          title: Id
+          type: string
+        sub_bills:
+          items:
+            $ref: '#/components/schemas/SubBillSpec'
+          title: Sub Bills
+          type: array
+        total:
+          description: Total
+          title: Total
+          type: number
+        updated:
+          description: Updated at
+          format: date-time
+          title: Updated
+          type: string
+      required:
+      - total
+      - sub_bills
+      - created
+      - updated
+      - id
+      title: Bill
+      type: object
+    BillSpec:
+      properties:
+        sub_bills:
+          items:
+            $ref: '#/components/schemas/SubBillSpec'
+          title: Sub Bills
+          type: array
+        total:
+          description: Total
+          title: Total
+          type: number
+      required:
+      - total
+      - sub_bills
+      title: BillSpec
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
     Health:
       properties:
         db:
@@ -8,11 +67,70 @@ components:
           type: boolean
       title: Health
       type: object
+    SubBillSpec:
+      properties:
+        amount:
+          title: Amount
+          type: number
+        reference:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reference
+      required:
+      - amount
+      title: SubBillSpec
+      type: object
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
 info:
   title: Uselevers Backend
   version: 1.0.0-dev
 openapi: 3.1.0
 paths:
+  /api/v1/bills:
+    post:
+      description: Create new bill.
+      operationId: create_bills
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillSpec'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bill'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Create Bills
   /health:
     get:
       description: Perform internal health checks

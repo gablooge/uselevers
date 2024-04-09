@@ -58,7 +58,13 @@ It likely means your `.env` is out of date. Perform a comparison between your `.
 Before committing, run lint.sh:
 
 ```sh
+# this will not checking the safety and include bandit checks
 poetry run scripts/lint.sh
+
+# include safety checks
+poetry run scripts/lint.sh --include-safety
+# exclude the bandit checks
+poetry run scripts/lint.sh --skip-bandit
 ```
 
 ### Formatting code
